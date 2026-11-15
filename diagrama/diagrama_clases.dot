@@ -1,0 +1,61 @@
+digraph WattControl {
+  graph [rankdir=TB, splines=polyline, nodesep=0.8, ranksep=0.9, fontname="Helvetica", dpi=170, pad=0.3];
+  node  [shape=plain, fontname="Helvetica", fontsize=11];
+  edge  [fontname="Helvetica", fontsize=10];
+
+  Carga [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#EAF2FB">
+      <tr><td><b><i>Carga</i></b><br/><i>&lt;&lt;abstracta&gt;&gt;</i></td></tr><hr/>
+      <tr><td align="left"># nombre : string<br align="left"/># etiqueta : string<br align="left"/># potenciaKW : float<br align="left"/># encendida : bool<br align="left"/># horasUso : int<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+ <i>debeEncender(hora, precio, embalses) : bool</i> {virtual puro}<br align="left"/>+ esAplazable() : bool {virtual}<br align="left"/>+ getHorasMinimas() : int {virtual}<br align="left"/>+ encender() : void<br align="left"/>+ apagar() : void<br align="left"/>+ reiniciar() : void<br align="left"/>+ horasPendientes() : int<br align="left"/>+ getNombre() / getPotencia() / getHorasUso()<br align="left"/></td></tr>
+    </table>>];
+
+  CargaCritica [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFFFFF">
+      <tr><td><b>CargaCritica</b></td></tr><hr/>
+      <tr><td align="left">(sin atributos propios)<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+ debeEncender(...) : bool  {siempre true}<br align="left"/></td></tr>
+    </table>>];
+
+  CargaAplazable [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFFFFF">
+      <tr><td><b>CargaAplazable</b></td></tr><hr/>
+      <tr><td align="left">- horasMinimas : int<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+ debeEncender(...) : bool  {regla 2 a 5}<br align="left"/>+ esAplazable() : bool<br align="left"/>+ getHorasMinimas() : int<br align="left"/></td></tr>
+    </table>>];
+
+  Medidor [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFFFFF">
+      <tr><td><b>Medidor</b></td></tr><hr/>
+      <tr><td align="left">- kwhTotal : float<br align="left"/>- costoTotal : float<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+ registrar(potenciaKW, precio) : float<br align="left"/>+ reiniciar() : void<br align="left"/>+ getKwh() : float<br align="left"/>+ getCosto() : float<br align="left"/></td></tr>
+    </table>>];
+
+  Mercado [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFFFFF">
+      <tr><td><b>Mercado</b></td></tr><hr/>
+      <tr><td align="left">- nivelEmbalses : float<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+ precioHora(hora) : float<br align="left"/>+ getNivelEmbalses() : float<br align="left"/>+ setNivelEmbalses(nivel) : void<br align="left"/></td></tr>
+    </table>>];
+
+  Negocio [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFF6E0">
+      <tr><td><b>Negocio</b></td></tr><hr/>
+      <tr><td align="left">- nombre : string<br align="left"/>- medidorCon : Medidor<br align="left"/>- medidorSin : Medidor<br align="left"/>- cargas[MAX_CARGAS] : Carga*<br align="left"/>- numCargas : int<br align="left"/>- mercado : Mercado*<br align="left"/>- horasSimuladas, fallas, alertasPotencia : int<br align="left"/>- emergencia, produccionIncompleta : bool<br align="left"/></td></tr><hr/>
+      <tr><td align="left">- decidir(hora, precio, embalses, quiere[], ...) : int<br align="left"/>+ agregarCarga(c : Carga*) : void<br align="left"/>+ evaluar(hora, precio, embalses) : void<br align="left"/>+ simularDia() : void<br align="left"/>+ resumen() : void<br align="left"/>+ mostrar() : void<br align="left"/></td></tr>
+    </table>>];
+
+  // Herencia: triangulo vacio hacia la clase base
+  CargaCritica  -> Carga [arrowhead=onormal, label="  herencia"];
+  CargaAplazable -> Carga [arrowhead=onormal, label="  herencia"];
+
+  // Composicion: rombo lleno del lado del Negocio (el todo)
+  Negocio -> Medidor [arrowtail=diamond, dir=back, headlabel="2", taillabel="1", label="  composicion\n  (es parte)"];
+  // Agregacion: rombo vacio del lado del Negocio
+  Negocio -> Carga [arrowtail=odiamond, dir=back, headlabel="1..*", taillabel="1", label="  agregacion\n  (Carga*)"];
+  // Asociacion: flecha simple
+  Negocio -> Mercado [arrowhead=vee, headlabel="1", label="  asociacion\n  (conoce y pide datos)"];
+
+  {rank=same; CargaCritica; CargaAplazable}
+  {rank=same; Medidor; Mercado}
+}
